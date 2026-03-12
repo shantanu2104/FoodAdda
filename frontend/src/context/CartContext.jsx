@@ -1,4 +1,5 @@
-import { createContext, useContext, useState } from "react"
+import { createContext, useContext, useState, useEffect } from "react"
+import API from "../api/axios"
 
 const CartContext = createContext()
 
@@ -6,45 +7,48 @@ export const CartProvider = ({ children }) => {
 
   const [cartItems, setCartItems] = useState([])
 
-  const addToCart = (food) => {
+  const token = localStorage.getItem("token")
 
-    const exist = cartItems.find((item) => item._id === food._id)
-
-    if (exist) {
-      setCartItems(
-        cartItems.map((item) =>
-          item._id === food._id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        )
-      )
-    } else {
-      setCartItems([...cartItems, { ...food, quantity: 1 }])
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`
     }
   }
 
-  const removeFromCart = (id) => {
-    setCartItems(cartItems.filter((item) => item._id !== id))
+  const fetchCart = async () => {
+    const { data } = await API.get("/cart", config)
+
+    const formatted = data.items.map(item => ({
+      ...item.food,
+      quantity: item.quantity
+    }))
+
+    setCartItems(formatted)
   }
 
-  const increaseQty = (id) => {
-    setCartItems(
-      cartItems.map((item) =>
-        item._id === id
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      )
-    )
+  useEffect(() => {
+    if (token) fetchCart()
+  }, [token])
+
+
+  const addToCart = async (foodId) => {
+    await API.post("/cart/add", { foodId }, config)
+    fetchCart()
   }
 
-  const decreaseQty = (id) => {
-    setCartItems(
-      cartItems.map((item) =>
-        item._id === id
-          ? { ...item, quantity: item.quantity - 1 }
-          : item
-      ).filter((item) => item.quantity > 0)
-    )
+  const increaseQty = async (foodId) => {
+    await API.post("/cart/update", { foodId, type: "inc" }, config)
+    fetchCart()
+  }
+
+  const decreaseQty = async (foodId) => {
+    await API.post("/cart/update", { foodId, type: "dec" }, config)
+    fetchCart()
+  }
+
+  const removeFromCart = async (foodId) => {
+    await API.post("/cart/remove", { foodId }, config)
+    fetchCart()
   }
 
   return (
@@ -52,9 +56,9 @@ export const CartProvider = ({ children }) => {
       value={{
         cartItems,
         addToCart,
-        removeFromCart,
         increaseQty,
-        decreaseQty
+        decreaseQty,
+        removeFromCart
       }}
     >
       {children}

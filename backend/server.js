@@ -9,6 +9,7 @@ import paymentRoutes from "./routes/paymentRoutes.js"
 import authRoutes from "./routes/authRoutes.js"
 import foodRoutes from "./routes/foodRoutes.js"
 import orderRoutes from "./routes/orderRoutes.js"
+import cartRoutes from "./routes/cartRoutes.js"
 
 connectDB()
 
@@ -17,6 +18,7 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
+app.use("/api/cart", cartRoutes)
 app.use("/api/auth", authRoutes)
 app.use("/api/food", foodRoutes)
 app.use("/api/payment", paymentRoutes)

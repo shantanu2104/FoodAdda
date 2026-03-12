@@ -16,27 +16,33 @@ function Login() {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
- const handleSubmit = async (e) => {
-  e.preventDefault()
+  const handleSubmit = async (e) => {
+    e.preventDefault()
 
-  try {
-    const { data } = await API.post("/auth/login", form)
+    try {
 
-    localStorage.setItem("token", data.token)
-    localStorage.setItem("role", data.role)
+      const { data } = await API.post("/auth/login", form)
 
-    alert("Login successful")
+      // store auth data
+      localStorage.setItem("token", data.token)
+      localStorage.setItem("role", data.role)
 
-    if (data.role === "admin") {
-      navigate("/admin")
-    } else {
-      navigate("/")
+      // store user info (needed for cart per user)
+      localStorage.setItem("user", JSON.stringify(data.user))
+
+      alert("Login successful")
+
+      if (data.role === "admin") {
+        navigate("/admin")
+      } else {
+        navigate("/")
+      }
+
+    } catch (error) {
+      alert(error.response?.data?.message || "Invalid credentials")
     }
-
-  } catch (error) {
-    alert(error.response?.data?.message || "Invalid credentials")
   }
-}
+
   return (
     <div className="flex justify-center mt-20">
 
@@ -68,10 +74,8 @@ function Login() {
           Login
         </button>
 
-       
-       
         <p className="text-center text-sm">
-          New User ? {" "}
+          New User ?{" "}
           <Link to="/signup" className="text-orange-500">
             Signup
           </Link>
